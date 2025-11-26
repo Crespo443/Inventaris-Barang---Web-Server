@@ -22,21 +22,34 @@ $tipe_pesan = "";
 
 // --- LOGIC HAPUS DATA ---
 if (isset($_GET['hapus'])) {
-    $id = $_GET['hapus'];
+    $id = mysqli_real_escape_string($conn, $_GET['hapus']);
 
     // 1. CEK DULU: Apakah supplier ini men-suplay barang?
-    $cek_terpakai = mysqli_query($conn, "SELECT * FROM tabel_barang WHERE id_supplier='$id'");
+    $cek_terpakai = mysqli_query($conn, "SELECT nama_barang FROM tabel_barang WHERE id_supplier='$id' LIMIT 3");
+    $jumlah_barang = mysqli_num_rows($cek_terpakai);
 
-    if (mysqli_num_rows($cek_terpakai) > 0) {
-        $pesan = "Supplier ini terdaftar di data Barang. Tidak bisa dihapus sembarangan.";
+    if ($jumlah_barang > 0) {
+        // Ambil nama barang yang di-supply
+        $list_barang = [];
+        while ($b = mysqli_fetch_assoc($cek_terpakai)) {
+            $list_barang[] = $b['nama_barang'];
+        }
+        $nama_barang = implode(', ', $list_barang);
+
+        // Hitung total barang
+        $total_query = mysqli_query($conn, "SELECT COUNT(*) as total FROM tabel_barang WHERE id_supplier='$id'");
+        $total_data = mysqli_fetch_assoc($total_query);
+        $total_barang = $total_data['total'];
+
+        $pesan = "⚠️ Supplier tidak dapat dihapus! Masih men-supply {$total_barang} barang. Contoh: {$nama_barang}" . ($total_barang > 3 ? ', dll.' : '');
         $tipe_pesan = "error";
     } else {
         $qHapus = mysqli_query($conn, "DELETE FROM tabel_supplier WHERE id_supplier='$id'");
         if ($qHapus) {
-            $pesan = "Supplier berhasil dihapus!";
+            $pesan = "✅ Supplier berhasil dihapus!";
             $tipe_pesan = "success";
         } else {
-            $pesan = "Gagal menghapus supplier!";
+            $pesan = "❌ Gagal menghapus supplier!";
             $tipe_pesan = "error";
         }
     }
@@ -51,6 +64,15 @@ include 'layout/sidebar.php';
     <a href="tambah_supplier.php" class="btn btn-sm btn-primary shadow-sm">
         <i class="fas fa-plus fa-sm text-white-50"></i> Tambah Supplier
     </a>
+</div>
+
+<!-- Info Alert -->
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+    <i class="fas fa-info-circle"></i>
+    <strong>Informasi:</strong> Supplier yang masih men-supply barang <strong>tidak dapat dihapus</strong>. Hapus atau ganti supplier barang terlebih dahulu.
+    <button type="button" class="close" data-dismiss="alert">
+        <span>&times;</span>
+    </button>
 </div>
 
 <div class="card shadow mb-4">

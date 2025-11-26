@@ -1,5 +1,9 @@
--- SQL untuk membuat tabel pengembalian barang
+-- SQL untuk membuat database dan tabel pengembalian barang
 -- Jalankan di phpMyAdmin
+
+-- 0. Membuat Database (jika belum ada)
+CREATE DATABASE IF NOT EXISTS `db_inventaris` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `db_inventaris`;
 
 -- 1. Tabel Header Transaksi Pengembalian
 CREATE TABLE IF NOT EXISTS `tabel_barang_kembali` (
